@@ -3,10 +3,11 @@ import os, sys
 from icecube import dataio
 import numpy as np
 import awkward as ak
+import argparse
 
-geo = np.load('geo_array.npy')
+#geo = np.load('geo_array.npy')
 
-def convert(fname):
+def convert(fname, outdir=None):
     file = dataio.I3File(fname)
     data = []
 
@@ -37,18 +38,19 @@ def convert(fname):
 
             sensor_idx = string_idx * 60 + om_idx
 
-            xyz = geo[string_idx, om_idx]
+            #xyz = geo[string_idx, om_idx]
 
             for i, pulse in enumerate(om_pulses):
-                hits.append({'string_idx':string_idx,
-			     'dom_idx':om_idx,
-			      'x':xyz[0],
-                              'y':xyz[1],
-			      'z':xyz[2],
-			      'time':pulse.time,
-			      'charge':pulse.charge,
-			      'flag':pulse.flags == 4 or pulse.flags == 5,
-			      })
+                hits.append({'sensor_idx':sensor_idx,
+                             #'string_idx':string_idx,
+			     #'dom_idx':om_idx,
+			     #'x':xyz[0],
+                             #'y':xyz[1],
+			     #'z':xyz[2],
+			     'time':pulse.time,
+			     'charge':pulse.charge,
+			     'flag':pulse.flags == 4 or pulse.flags == 5,
+			     })
 
 
         MC = frame['I3MCTree']
@@ -57,11 +59,24 @@ def convert(fname):
     if len(data) == 0:
         return
     a = ak.from_iter(data)
-    ak.to_parquet(a, fname.rstrip('i3.zst')+'.parquet')
+
+    fname = fname.rstrip('i3.zst')+'.parquet'
+
+    if outdir:
+        fname = os.path.join(outdir, os.path.split(fname)[1])
+
+    print(f"Writing to {fname}")
+    ak.to_parquet(a, fname)
 
 
 if __name__ == '__main__':
-    for fname in sys.argv[1:]: 
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--outdir", default=None)
+    parser.add_argument("files", nargs='*')
+    args = parser.parse_args()
+
+    for fname in args.files: 
         assert os.path.exists(fname)
-        print(fname)
-        convert(fname)
+        print(f"Opening {fname}")
+        convert(fname, outdir=args.outdir)
