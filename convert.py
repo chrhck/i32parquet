@@ -5,7 +5,6 @@ import numpy as np
 import awkward as ak
 import argparse
 
-#geo = np.load('geo_array.npy')
 
 def convert(fname, outdir=None):
     file = dataio.I3File(fname)
@@ -38,15 +37,8 @@ def convert(fname, outdir=None):
 
             sensor_idx = string_idx * 60 + om_idx
 
-            #xyz = geo[string_idx, om_idx]
-
             for i, pulse in enumerate(om_pulses):
                 hits.append({'sensor_idx':sensor_idx,
-                             #'string_idx':string_idx,
-			     #'dom_idx':om_idx,
-			     #'x':xyz[0],
-                             #'y':xyz[1],
-			     #'z':xyz[2],
 			     'time':pulse.time,
 			     'charge':pulse.charge,
 			     'flag':pulse.flags == 4 or pulse.flags == 5,
